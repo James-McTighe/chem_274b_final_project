@@ -3,10 +3,11 @@ current_dir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentfra
 parent_dir = os.path.dirname(current_dir)
 sys.path.insert(0, parent_dir)
 
-from timeout_decorator import timeout
+# from timeout_decorator import timeout
 import unittest
 from banking_system_impl import BankingSystemImpl
-
+import pytest # type: ignore
+import pytest_timeout # type: ignore
 
 class SandboxTests(unittest.TestCase):
     """
@@ -27,7 +28,7 @@ class SandboxTests(unittest.TestCase):
     def setUp(cls):
         cls.system = BankingSystemImpl()
 
-    @timeout(0.4)
+    @pytest.mark.timeout(0.4)
     def test_sample(self):
         self.assertTrue(self.system.create_account(1, 'account1'))
         self.assertTrue(self.system.create_account(2, 'account2'))
