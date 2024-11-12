@@ -1,11 +1,12 @@
-from abc import ABC
+from abc import ABC, abstractmethod
 
 
 class BankingSystem(ABC):
     """
     `BankingSystem` interface.
     """
- 
+
+    
     def create_account(self, timestamp: int, account_id: str) -> bool:
         """
         Should create a new account with the given identifier if it
