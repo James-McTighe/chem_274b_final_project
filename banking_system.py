@@ -1,12 +1,36 @@
 from abc import ABC, abstractmethod
-
+import sqlite3
 
 class BankingSystem(ABC):
     """
     `BankingSystem` interface.
     """
-
+    def __init__(self, db_name):
+        super().__init__()
+        self.db_name = db_name
+        self.conn = None
     
+    # Methods for database management
+    def connect(self):
+        self.conn = sqlite3.connect(self.db_name)
+
+    def close(self):
+        if self.conn:
+            self.conn.close()
+
+    def execute_query(self, query, params=None):
+        if not self.conn:
+            self.connect()
+
+        cursor = self.conn.cursor()
+        if params:
+            cursor.execute(query, params)
+        else:
+            cursor.execute(query)
+
+        return cursor.fetchall()
+    
+    # Level 1 Methods
     def create_account(self, timestamp: int, account_id: str) -> bool:
         """
         Should create a new account with the given identifier if it
@@ -45,6 +69,8 @@ class BankingSystem(ABC):
         # default implementation
         return None
 
+
+    # Level 2 Methods
     def top_spenders(self, timestamp: int, n: int) -> list[str]:
         """
         Should return the identifiers of the top `n` accounts with
@@ -66,6 +92,7 @@ class BankingSystem(ABC):
         # default implementation
         return []
 
+    # Level 3 Methods
     def pay(self, timestamp: int, account_id: str, amount: int) -> str | None:
         """
         Should withdraw the given amount of money from the specified
@@ -113,6 +140,7 @@ class BankingSystem(ABC):
         # default implementation
         return None
 
+    # Level 4 Methods
     def merge_accounts(self, timestamp: int, account_id_1: str, account_id_2: str) -> bool:
         """
         Should merge `account_id_2` into the `account_id_1`.
