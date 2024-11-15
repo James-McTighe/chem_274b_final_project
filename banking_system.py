@@ -1,34 +1,9 @@
 from abc import ABC, abstractmethod
-import sqlite3
 
 class BankingSystem(ABC):
     """
     `BankingSystem` interface.
     """
-    def __init__(self, db_name):
-        super().__init__()
-        self.db_name = db_name
-        self.conn = None
-    
-    # Methods for database management
-    def connect(self):
-        self.conn = sqlite3.connect(self.db_name)
-
-    def close(self):
-        if self.conn:
-            self.conn.close()
-
-    def execute_query(self, query, params=None):
-        if not self.conn:
-            self.connect()
-
-        cursor = self.conn.cursor()
-        if params:
-            cursor.execute(query, params)
-        else:
-            cursor.execute(query)
-
-        return cursor.fetchall()
     
     # Level 1 Methods
     def create_account(self, timestamp: int, account_id: str) -> bool:
@@ -38,7 +13,7 @@ class BankingSystem(ABC):
         Returns `True` if the account was successfully created or
         `False` if an account with `account_id` already exists.
         """
-        # default implementation
+        
         return False
 
     def deposit(self, timestamp: int, account_id: str, amount: int) -> int | None:
