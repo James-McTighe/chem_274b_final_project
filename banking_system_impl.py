@@ -66,27 +66,14 @@ class BankingSystemImpl(BankingSystem):
         self.connect()
         cur = self.conn.cursor()
 
-        self.execute_query("INSERT INTO user_data(account_id, create_date, active) "
-                           f"VALUES('{account_id}', '{timestamp}', TRUE);")
-        
-        cur.execute("SELECT * FROM user_data;")
-        for row in cur:
-            print(row)
+        try:
+            cur.execute("INSERT INTO user_data(create_date, account_id) VALUES(?,?)",(timestamp, account_id))
+            self.conn.commit()
+            cur.close()
+            self.conn.close()
+            return True
+        except sqlite3.IntegrityError:
+            cur.close()
+            self.close()
+            return False
 
-    def bool_test(self):
-        self.connect()
-        cur = self.conn.cursor()
-
-        cur.execute("SELECT EXISTS (SELECT 1 FROM user_data WHERE account_id = 'Barbara');")        
-        # return super().create_account(timestamp, account_id)
-        for x in cur:
-            if x[0] == 0:
-                print("doesn't exist")
-
-    
-
-
-a = BankingSystemImpl('chem_274B_fp.db')
-a.create_account(4, "Barbara")
-
-a.bool_test()

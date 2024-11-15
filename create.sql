@@ -1,5 +1,5 @@
 CREATE TABLE IF NOT EXISTS user_data(
-    account_id varchar(255),
+    account_id varchar(255) UNIQUE,
     create_date TIMESTAMP,
     active BOOLEAN,
     merge_id VARCHAR(255),
