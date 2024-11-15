@@ -63,30 +63,78 @@ class BankingSystemImpl(BankingSystem):
         
     def deposit(self, timestamp, account_id, amount):
         self.connect()
-
-        if not self.cur.execute(f"SELECT account_id FROM user_data WHERE account_id=?;", (account_id,)):
-            self.close()
-            return None
-        else:
+       
+        if self.check_if_value_exists('user_data', 'account_id', account_id):
             self.cur.execute(
                 "UPDATE user_data "
                 f"SET account_balance=account_balance+{amount} "
                 f"WHERE account_id='{account_id}';"
             )
+            self.cur.execute(
+                "UPDATE user_data "
+                f"SET account_time_stamp='{timestamp}' "
+                f"WHERE account_id='{account_id}';"
+            )
             self.conn.commit()
 
-        self.cur.execute(f"SELECT account_balance FROM user_data WHERE account_id='{account_id}'")
-        result = self.cur.fetchone()
-        updated_balance = result[0]
+            self.cur.execute(f"SELECT account_balance FROM user_data WHERE account_id='{account_id}'")
+            result = self.cur.fetchone()
+            updated_balance = result[0]
+            self.close()
+
+            return updated_balance
+
+        else:
+            self.close()
+            return None
+
+    def transfer(self, timestamp, source_account_id, target_account_id, amount):
+        valid_source = self.check_if_value_exists('user_data', 'account_id', source_account_id)
+        valid_target = self.check_if_value_exists('user_data', 'account_id', target_account_id)
+
+        if not valid_source or not valid_target:
+            return None
+        if source_account_id == target_account_id:
+            return None
+
+        self.connect()
+        self.cur.execute(
+            "SELECT account_balance "
+            "FROM user_data "
+            "WHERE account_id=?",
+            (source_account_id,)
+        )
+        source_result = self.cur.fetchone()
+        source_balance = source_result[0]
+
+        if source_balance < amount:
+            self.close()
+            return None
+        
+        self.cur.execute(
+            "UPDATE user_data "
+            f"SET account_balance=account_balance - amount "
+            f"WHERE account_id='{source_account_id}';"
+        )
+        self.cur.execute(
+            "UPDATE user_data "
+            f"SET account_balance=account_balance + amount "
+            f"WHERE account_id='{target_account_id}';"
+        )
+
+        self.conn.commit()
+
+        self.cur.execute(
+            "SELECT account_balance "
+            "FROM user_data "
+            "WHERE account_id=?", (source_account_id,)
+        )
+        source_result=self.cur.fetchone()
+        source_balance=source_result[0]
+
         self.close()
 
-        return updated_balance
-    
-    def transfer(self, timestamp, source_account_id, target_account_id, amount):
-        return super().transfer(timestamp, source_account_id, target_account_id, amount)
+        return source_balance
 
 
-
-db = BankingSystemImpl()
-print(db.check_if_value_exists('user_data','account_id','sara'))
 

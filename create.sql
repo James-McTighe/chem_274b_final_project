@@ -1,14 +1,15 @@
 CREATE TABLE IF NOT EXISTS user_data(
     account_id varchar(255) UNIQUE,
-    create_date TIMESTAMP,
-    active BOOLEAN,
+    account_time_stamp TIMESTAMP,
+    active BOOLEAN DEFAULT True,
     merge_id VARCHAR(255),
-    merge_date TIMESTAMP
+    merge_date TIMESTAMP,
+    account_balance INT DEFAULT 0
 );
 
 CREATE TABLE IF NOT EXISTS balances(
     account_id varchar(255),
-    ammount INT,
+    amount INT,
     account_date TIMESTAMP
 );
 
