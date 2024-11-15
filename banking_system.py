@@ -1,11 +1,11 @@
-from abc import ABC
-
+from abc import ABC, abstractmethod
 
 class BankingSystem(ABC):
     """
     `BankingSystem` interface.
     """
- 
+    
+    # Level 1 Methods
     def create_account(self, timestamp: int, account_id: str) -> bool:
         """
         Should create a new account with the given identifier if it
@@ -13,7 +13,7 @@ class BankingSystem(ABC):
         Returns `True` if the account was successfully created or
         `False` if an account with `account_id` already exists.
         """
-        # default implementation
+        
         return False
 
     def deposit(self, timestamp: int, account_id: str, amount: int) -> int | None:
@@ -44,6 +44,8 @@ class BankingSystem(ABC):
         # default implementation
         return None
 
+
+    # Level 2 Methods
     def top_spenders(self, timestamp: int, n: int) -> list[str]:
         """
         Should return the identifiers of the top `n` accounts with
@@ -65,6 +67,7 @@ class BankingSystem(ABC):
         # default implementation
         return []
 
+    # Level 3 Methods
     def pay(self, timestamp: int, account_id: str, amount: int) -> str | None:
         """
         Should withdraw the given amount of money from the specified
@@ -112,6 +115,7 @@ class BankingSystem(ABC):
         # default implementation
         return None
 
+    # Level 4 Methods
     def merge_accounts(self, timestamp: int, account_id_1: str, account_id_2: str) -> bool:
         """
         Should merge `account_id_2` into the `account_id_1`.
