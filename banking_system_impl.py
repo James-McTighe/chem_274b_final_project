@@ -60,13 +60,33 @@ class BankingSystemImpl(BankingSystem):
     def create_table(self):
         self.execute_script("create.sql")
 
-    def pay(self, timestamp, account_id, amount):
-        return super().pay(timestamp, account_id, amount)
+    def create_account(self, timestamp, account_id):
+        self.create_table()
+
+        self.connect()
+        cur = self.conn.cursor()
+
+        self.execute_query("INSERT INTO user_data(account_id, create_date, active) "
+                           f"VALUES('{account_id}', '{timestamp}', TRUE);")
+        
+        cur.execute("SELECT * FROM user_data;")
+        for row in cur:
+            print(row)
+
+    def bool_test(self):
+        self.connect()
+        cur = self.conn.cursor()
+
+        cur.execute("SELECT EXISTS (SELECT 1 FROM user_data WHERE account_id = 'Barbara');")        
+        # return super().create_account(timestamp, account_id)
+        for x in cur:
+            if x[0] == 0:
+                print("doesn't exist")
+
     
 
 
 a = BankingSystemImpl('chem_274B_fp.db')
+a.create_account(4, "Barbara")
 
-a.create_table()
-
-a.close()
+a.bool_test()
