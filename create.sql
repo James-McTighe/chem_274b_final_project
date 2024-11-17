@@ -1,6 +1,12 @@
+DROP TABLE IF EXISTS user_data;
+
+DROP TABLE IF EXISTS balances;
+
+DROP TABLE IF EXISTS transactions;
+
 CREATE TABLE IF NOT EXISTS user_data(
     account_id varchar(255) UNIQUE,
-    account_time_stamp TIMESTAMP,
+    create_date TIMESTAMP,
     active BOOLEAN DEFAULT True,
     merge_id VARCHAR(255),
     merge_date TIMESTAMP,

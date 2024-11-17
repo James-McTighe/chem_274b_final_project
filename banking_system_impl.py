@@ -6,8 +6,13 @@ class BankingSystemImpl(BankingSystem):
     def __init__(self):
         super().__init__()
         self.db_name = "chem_274B_fp.db"
-        self.conn = None
-        self.cur = None
+        self.conn = sqlite3.connect(self.db_name)
+        self.cur = self.conn.cursor()
+
+        with open("create.sql") as f:
+            sql_script = f.read()
+            self.cur.executescript(sql_script)
+        
         
     # Methods for database management
     def connect(self):
@@ -16,7 +21,6 @@ class BankingSystemImpl(BankingSystem):
 
     def close(self):
         if self.conn:
-            self.cur.close()
             self.conn.close()
 
     def commit_and_close(self):
@@ -49,7 +53,7 @@ class BankingSystemImpl(BankingSystem):
         return result is not None
 
     def create_account(self, timestamp, account_id):
-        self.create_table()
+        #self.create_table()
 
         self.connect()
 
@@ -65,6 +69,7 @@ class BankingSystemImpl(BankingSystem):
         self.connect()
        
         if self.check_if_value_exists('user_data', 'account_id', account_id):
+            self.connect()
             self.cur.execute(
                 "UPDATE user_data "
                 f"SET account_balance=account_balance+{amount} "
@@ -72,7 +77,7 @@ class BankingSystemImpl(BankingSystem):
             )
             self.cur.execute(
                 "UPDATE user_data "
-                f"SET account_time_stamp='{timestamp}' "
+                f"SET create_date='{timestamp}' "
                 f"WHERE account_id='{account_id}';"
             )
             self.conn.commit()
@@ -111,14 +116,15 @@ class BankingSystemImpl(BankingSystem):
             self.close()
             return None
         
+        self.connect()
         self.cur.execute(
             "UPDATE user_data "
-            f"SET account_balance=account_balance - amount "
+            f"SET account_balance=account_balance - {amount} "
             f"WHERE account_id='{source_account_id}';"
         )
         self.cur.execute(
             "UPDATE user_data "
-            f"SET account_balance=account_balance + amount "
+            f"SET account_balance=account_balance + {amount} "
             f"WHERE account_id='{target_account_id}';"
         )
 
