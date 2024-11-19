@@ -1,6 +1,6 @@
+import sqlite3
 from banking_system import BankingSystem
 from db_base_class import Query
-import sqlite3
 
 class BankingSystemImpl(BankingSystem, Query):
 
@@ -48,50 +48,28 @@ class BankingSystemImpl(BankingSystem, Query):
             return None
 
     def transfer(self, timestamp, source_account_id, target_account_id, amount):
+        if source_account_id == target_account_id:
+            return None
+        
         valid_source = self.check_if_value_exists('user_data', 'account_id', source_account_id)
         valid_target = self.check_if_value_exists('user_data', 'account_id', target_account_id)
 
         if not valid_source or not valid_target:
             return None
-        if source_account_id == target_account_id:
-            return None
 
-        self.connect()
-        self.cur.execute(
-            "SELECT account_balance "
-            "FROM user_data "
-            "WHERE account_id=?",
-            (source_account_id,)
-        )
-        source_result = self.cur.fetchone()
-        source_balance = source_result[0]
+        source_result = self.get_data_base_info("balances", "amount", source_account_id)
+        source_balance = source_result
+        new_source_balance = source_balance - amount
 
         if source_balance < amount:
-            self.close()
             return None
         
-        self.connect()
-        self.cur.execute(
-            "UPDATE user_data "
-            f"SET account_balance=account_balance - {amount} "
-            f"WHERE account_id='{source_account_id}';"
-        )
-        self.cur.execute(
-            "UPDATE user_data "
-            f"SET account_balance=account_balance + {amount} "
-            f"WHERE account_id='{target_account_id}';"
-        )
+        self.update_account_balance(new_source_balance, timestamp, source_account_id)
 
-        self.conn.commit()
-
-        self.cur.execute(
-            "SELECT account_balance "
-            "FROM user_data "
-            "WHERE account_id=?", (source_account_id,)
-        )
-        source_result=self.cur.fetchone()
-        source_balance=source_result[0]
-
+        target_balance = self.get_data_base_info("balances", "amount", target_account_id)
+        new_target_balance = target_balance + amount
+        self.update_account_balance(new_target_balance, timestamp, target_account_id)
+      
         self.record_transaction(
             source_account_id,
             -amount,
@@ -100,7 +78,5 @@ class BankingSystemImpl(BankingSystem, Query):
             "None"
         )
 
-        self.close()
-
-        return source_balance
+        return new_source_balance
 

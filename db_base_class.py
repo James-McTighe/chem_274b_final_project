@@ -31,16 +31,15 @@ class Query(ABC):
         """
         self.connect()
         
-        with open(f"db_scr{script}") as f:
+        with open(f"db_scr/{script}") as f:
             sql_script = f.read()
 
         if parameters:
             self.cur.execute(sql_script, parameters)
         else:
             self.cur.execute(sql_script)
-        self.conn.commit()
 
-        self.close()
+        self.commit_and_close()
 
     def check_if_value_exists(self, table_name:str, column_name:str, value) -> bool:
         self.connect()
@@ -100,7 +99,12 @@ class Query(ABC):
         entered_data = (amount, account_date, account_id)
         self.execute_script("update_balance.sql", entered_data)
 
-    def get_data_base_info(self, table, column=None, account_id=None):
+    def get_data_base_info(self, table:str, column=None|str, account_id=None|str):
+
+        """
+        This function is meant to make generalized queires for any table present within the database.
+        Generally it will return a tuple or a list of tuples, but if both an account and column are specified, it will return a single value
+        """
         
         self.connect()
 
@@ -135,3 +139,4 @@ class Query(ABC):
             result = self.cur.fetchone()
             self.close()
             return result[0]
+        
