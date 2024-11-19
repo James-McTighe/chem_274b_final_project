@@ -75,12 +75,12 @@ class Query(ABC):
         self.execute_script("insert_user_data",entered_data)
 
     def record_transaction(
-            self,
-            account_id,
-            amount,
-            date_of_transaction,
-            type_of_transaction,
-            cashback_date
+        self,
+        account_id,
+        amount,
+        date_of_transaction,
+        type_of_transaction,
+        cashback_date
     ):
         entered_data = (
             account_id,
@@ -92,6 +92,46 @@ class Query(ABC):
         
         self.execute_script("record_transaction",entered_data)
 
-    def update_account(self, parameter, value, account_id):
+    def update_account_info(self, parameter, value, account_id):
         entered_data = (parameter, value, account_id)
         self.execute_script("update_account", entered_data)
+
+    def update_account_balance(self, amount, account_date, account_id):
+        entered_data = (amount, account_date, account_id)
+        self.execute_script("update_balance.sql", entered_data)
+
+    def get_data_base_info(self, table, column=None, account_id=None):
+        
+        self.connect()
+
+        if column is None and account_id is None:
+            self.cur.execute(
+                f"SELECT * FROM {table};"
+            )
+            result = self.cur.fetchall()
+            self.close()
+            return result
+        
+        elif column is None:
+            self.cur.execute(
+                f"SELECT * FROM {table} WHERE account_id='{account_id}';"
+            )
+            result = self.cur.fetchone()
+            self.close()
+            return result
+        
+        elif account_id is None:
+            self.cur.execute(
+                f"SELECT {column} FROM {table};"
+            )
+            result = self.cur.fetchone()
+            self.close()
+            return result
+        
+        else:
+            self.cur.execute(
+                f"SELECT {column} FROM {table} WHERE account_id='{account_id}';"
+            )
+            result = self.cur.fetchone()
+            self.close()
+            return result[0]
