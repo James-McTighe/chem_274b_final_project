@@ -105,7 +105,6 @@ class Query(ABC):
         This function is meant to make generalized queires for any table present within the database.
         Generally it will return a tuple or a list of tuples, but if both an account and column are specified, it will return a single value
         """
-        breakpoint()
         self.connect()
 
         if column == None and account_id == None:
