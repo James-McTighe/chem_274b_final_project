@@ -9,6 +9,7 @@ from banking_system_impl import BankingSystemImpl
 import pytest # type: ignore
 import pytest_timeout # type: ignore
 
+
 class SandboxTests(unittest.TestCase):
     """
     The test class below can be considered as a playground - feel free to modify it as you need, e.g.:
@@ -35,3 +36,4 @@ class SandboxTests(unittest.TestCase):
         self.assertEqual(self.system.deposit(3, 'account1', 2000), 2000)
         self.assertEqual(self.system.deposit(4, 'account2', 1000), 1000)
         self.assertEqual(self.system.transfer(5, 'account1', 'account2', 500), 1500)
+

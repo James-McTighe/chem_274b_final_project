@@ -5,14 +5,18 @@ from db_base_class import Query
 class BankingSystemImpl(BankingSystem, Query):
 
     def __init__(self):
-        super().__init__()
+        # super().__init__()
         self.db_name = "chem_274B_fp.db"
         self.conn = sqlite3.connect(self.db_name)
         self.cur = self.conn.cursor()
+        self.create_tables()
 
-        with open("create.sql") as f:
-            sql_script = f.read()
-            self.cur.executescript(sql_script)
+    def create_tables(self):
+        self.connect()
+        with open("./db_scr/create.sql") as file:
+            sql_script = file.read()
+        self.cur.executescript(sql_script)
+        self.close()
         
     
     def create_account(self, timestamp, account_id):
@@ -80,3 +84,4 @@ class BankingSystemImpl(BankingSystem, Query):
 
         return new_source_balance
 
+a = BankingSystemImpl()

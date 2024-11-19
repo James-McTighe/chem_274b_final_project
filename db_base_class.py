@@ -31,7 +31,7 @@ class Query(ABC):
         """
         self.connect()
         
-        with open(f"db_scr/{script}") as f:
+        with open(f"./db_scr/{script}.sql",'r') as f:
             sql_script = f.read()
 
         if parameters:
