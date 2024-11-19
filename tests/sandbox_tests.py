@@ -33,6 +33,7 @@ class SandboxTests(unittest.TestCase):
     def test_sample(self):
         self.assertTrue(self.system.create_account(1, 'account1'))
         self.assertTrue(self.system.create_account(2, 'account2'))
+    def test_trans(self):
         self.assertEqual(self.system.deposit(3, 'account1', 2000), 2000)
         self.assertEqual(self.system.deposit(4, 'account2', 1000), 1000)
         self.assertEqual(self.system.transfer(5, 'account1', 'account2', 500), 1500)
