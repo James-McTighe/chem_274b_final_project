@@ -38,10 +38,10 @@ class BankingSystemImpl(BankingSystem, Query):
             old_balance = self.get_account_balance(account_id)
             new_balance = old_balance + amount
             self.update_account_balance(new_balance, timestamp, account_id)
-
             self.record_transaction(
                 account_id,
                 amount,
+                timestamp,
                 "deposit",
             )
             print(new_balance)
