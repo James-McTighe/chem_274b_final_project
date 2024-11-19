@@ -24,14 +24,14 @@ class BankingSystemImpl(BankingSystem, Query):
         self.connect()
 
         try:
-            self.insert_user_data(account_id, timestamp, True, None, None, 0)
+            self.insert_user_data(account_id, timestamp, 1, 0, 0, 0)
             return True
         except sqlite3.IntegrityError:
             self.close()
             return False
     
             
-    def deposit(self, timestamp, account_id, amount, date_of_transaction, cash_back_date):
+    def deposit(self, timestamp, account_id, amount):
        
         if self.check_if_value_exists('user_data', 'account_id', account_id):
             old_balance = self.get_data_base_info("balances", "amount", account_id)
@@ -41,9 +41,7 @@ class BankingSystemImpl(BankingSystem, Query):
             self.record_transaction(
                 account_id,
                 amount,
-                date_of_transaction,
                 "deposit",
-                cash_back_date
             )
 
             return new_balance

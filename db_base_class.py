@@ -61,7 +61,7 @@ class Query(ABC):
         merge_id,
         merge_date,
         account_balance):
-
+        
         entered_data = (
             account_id,
             creation_date,
@@ -79,7 +79,7 @@ class Query(ABC):
         amount,
         date_of_transaction,
         type_of_transaction,
-        cashback_date
+        cashback_date = None
     ):
         entered_data = (
             account_id,
@@ -108,7 +108,7 @@ class Query(ABC):
         
         self.connect()
 
-        if column is None and account_id is None:
+        if column == None and account_id == None:
             self.cur.execute(
                 f"SELECT * FROM {table};"
             )
@@ -116,7 +116,7 @@ class Query(ABC):
             self.close()
             return result
         
-        elif column is None:
+        elif column == None:
             self.cur.execute(
                 f"SELECT * FROM {table} WHERE account_id='{account_id}';"
             )
@@ -124,7 +124,7 @@ class Query(ABC):
             self.close()
             return result
         
-        elif account_id is None:
+        elif account_id == None:
             self.cur.execute(
                 f"SELECT {column} FROM {table};"
             )
