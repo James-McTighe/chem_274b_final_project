@@ -97,7 +97,7 @@ class Query(ABC):
 
     def update_account_balance(self, amount, account_date, account_id):
         entered_data = (amount, account_date, account_id)
-        self.execute_script("update_balance.sql", entered_data)
+        self.execute_script("update_balance", entered_data)
 
     def get_data_base_info(self, table:str, column=None|str, account_id=None|str):
 
