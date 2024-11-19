@@ -95,47 +95,21 @@ class Query(ABC):
         entered_data = (parameter, value, account_id)
         self.execute_script("update_account", entered_data)
 
+    def new_balance(self, account_id, amount, timestamp):
+        entered_data = (account_id, amount, timestamp)
+        self.execute_script("new_balance", entered_data)
+
     def update_account_balance(self, amount, account_date, account_id):
         entered_data = (amount, account_date, account_id)
         self.execute_script("update_balance", entered_data)
 
-    def get_data_base_info(self, table:str, column=None|str, account_id=None|str):
-
-        """
-        This function is meant to make generalized queires for any table present within the database.
-        Generally it will return a tuple or a list of tuples, but if both an account and column are specified, it will return a single value
-        """
+    def get_account_balance(self, account_id):
         self.connect()
+        self.cur.execute(
+            f"SELECT amount FROM balances WHERE account_id='{account_id}';"
+        )
+        result = self.cur.fetchone()
+        self.close()
+        return result[0]
 
-        if column == None and account_id == None:
-            self.cur.execute(
-                f"SELECT * FROM {table};"
-            )
-            result = self.cur.fetchall()
-            self.close()
-            return result
-        
-        elif column == None:
-            self.cur.execute(
-                f"SELECT * FROM {table} WHERE account_id='{account_id}';"
-            )
-            result = self.cur.fetchone()
-            self.close()
-            return result
-        
-        elif account_id == None:
-            self.cur.execute(
-                f"SELECT {column} FROM {table};"
-            )
-            result = self.cur.fetchone()
-            self.close()
-            return result
-        
-        else:
-            self.cur.execute(
-                f"SELECT {column} FROM {table} WHERE account_id='{account_id}';"
-            )
-            result = self.cur.fetchone()
-            self.close()
-            return result[0]
-        
+    

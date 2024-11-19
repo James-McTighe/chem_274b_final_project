@@ -24,7 +24,8 @@ class BankingSystemImpl(BankingSystem, Query):
         self.connect()
 
         try:
-            self.insert_user_data(account_id, timestamp, 1, 0, 0, 0)
+            self.insert_user_data(account_id, timestamp, 1, 1, 1, 1)
+            self.new_balance(account_id, 0, timestamp)
             return True
         except sqlite3.IntegrityError:
             self.close()
@@ -34,7 +35,7 @@ class BankingSystemImpl(BankingSystem, Query):
     def deposit(self, timestamp, account_id, amount):
        
         if self.check_if_value_exists('user_data', 'account_id', account_id):
-            old_balance = self.get_data_base_info("balances", "amount", account_id)
+            old_balance = self.get_account_balance(account_id)
             new_balance = old_balance + amount
             self.update_account_balance(new_balance, timestamp, account_id)
 
@@ -43,7 +44,7 @@ class BankingSystemImpl(BankingSystem, Query):
                 amount,
                 "deposit",
             )
-
+            print(new_balance)
             return new_balance
 
         else:
@@ -59,7 +60,7 @@ class BankingSystemImpl(BankingSystem, Query):
         if not valid_source or not valid_target:
             return None
 
-        source_result = self.get_data_base_info("balances", "amount", source_account_id)
+        source_result = self.get_account_balance(source_account_id)
         source_balance = source_result
         new_source_balance = source_balance - amount
 
@@ -68,7 +69,7 @@ class BankingSystemImpl(BankingSystem, Query):
         
         self.update_account_balance(new_source_balance, timestamp, source_account_id)
 
-        target_balance = self.get_data_base_info("balances", "amount", target_account_id)
+        target_balance = self.get_account_balance(target_account_id)
         new_target_balance = target_balance + amount
         self.update_account_balance(new_target_balance, timestamp, target_account_id)
       
@@ -82,4 +83,5 @@ class BankingSystemImpl(BankingSystem, Query):
 
         return new_source_balance
 
-a = BankingSystemImpl()
+# a = BankingSystemImpl()
+# print(a.get_data_base_info("balances","amount","account1"))
