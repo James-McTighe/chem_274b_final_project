@@ -23,13 +23,12 @@ class BankingSystemImpl(BankingSystem, Query):
         
         self.connect()
 
-        try:
-            self.insert_user_data(account_id, timestamp, 1, 1, 1, 1)
-            self.new_balance(account_id, 0, timestamp)
-            return True
-        except sqlite3.IntegrityError:
-            self.close()
+        if self.check_if_value_exists("user_data", "account_id", account_id):
             return False
+
+        self.insert_user_data(account_id, timestamp, 1, 1, 1, 1)
+        self.new_balance(account_id, 0, timestamp)
+        return True
     
             
     def deposit(self, timestamp, account_id, amount):
