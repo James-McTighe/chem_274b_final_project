@@ -1,8 +1,8 @@
 BEGIN;
 -- Drop tables if they exist
--- DROP TABLE IF EXISTS user_data;
--- DROP TABLE IF EXISTS balances;
--- DROP TABLE IF EXISTS transactions;
+DROP TABLE IF EXISTS user_data;
+DROP TABLE IF EXISTS balances;
+DROP TABLE IF EXISTS transactions;
 
 CREATE TABLE IF NOT EXISTS user_data (
     account_id VARCHAR(255),
