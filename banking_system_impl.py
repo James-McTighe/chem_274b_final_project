@@ -1,3 +1,4 @@
+import os
 import sqlite3
 from banking_system import BankingSystem
 from db_base_class import Query
@@ -6,6 +7,10 @@ class BankingSystemImpl(BankingSystem, Query):
 
     def __init__(self):
         # super().__init__()
+        # Delete database if it exists already.
+        if os.path.exists("chem_274B_fp.db"):
+            os.remove("chem_274B_fp.db")
+        
         self.db_name = "chem_274B_fp.db"
         self.conn = sqlite3.connect(self.db_name)
         self.cur = self.conn.cursor()
@@ -81,6 +86,16 @@ class BankingSystemImpl(BankingSystem, Query):
         )
 
         return new_source_balance
+    
+    def top_spenders(self, timestamp: int, n:int) -> list[str]:
+        """
+        Function to return the top n accounts based on outgoing transactions
+        """
+        # Create avariable which stores a tuple: (account id, sum(outgoing transactions)) 
+        output = self.execute_script("top_spenders", (n,)) 
 
+        # Perform list comprehension to extract tuple from the output
+        return [f"{account_id}({int(total_out)})" for account_id, total_out in output]
+    
 # a = BankingSystemImpl()
 # print(a.get_data_base_info("balances","amount","account1"))

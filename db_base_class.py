@@ -39,8 +39,12 @@ class Query(ABC):
         else:
             self.cur.execute(sql_script)
 
+        # Obatin the ouput from script execution
+        output = self.cur.fetchall()
         self.commit_and_close()
 
+        return output
+        
     def check_if_value_exists(self, table_name:str, column_name:str, value) -> bool:
         self.connect()
         self.cur.execute(f"SELECT 1 FROM {table_name} WHERE {column_name}=?",(value,))
