@@ -1,0 +1,2 @@
+INSERT INTO balances
+VALUES (?, ?, ?);
