@@ -416,22 +416,9 @@ class BankingSystemImpl(BankingSystem, Query):
 
         if time_at < cdate:
             return None
-        
-        transaction=self.cur.execute(f"SELECT * from transactions WHERE account_id='{account_id}' AND date_of_transaction={time_at} ").fetchone()
 
         balance=self.cur.execute(f"SELECT MAX(balance_date), amount from balance_history WHERE account_id='{account_id}' AND balance_date <= {time_at}").fetchone()[1]
         return balance + self.check_cashbacks(account_id, time_at)
 
-        if transaction==None:
-            balance=self.cur.execute(f"SELECT MAX(account_date), amount from balances WHERE account_id='{account_id}' AND account_date >= {time_at}").fetchone()[1]
-        
-        #Check if account is disabled
-        active=self.cur.execute(f"SELECT active from user_data WHERE account_id='{account_id}'")
-        if active.fetchone()[0] == 0:
-            merge_id=self.cur.execute(f"SELECT merge_id from user_data WHERE account_id = '{account_id}' ").fetchone()[0]
-
-            #Check if transactions occur
-
-            balance_date=self.cur.execute(f"SELECT MAX(create_date) from user_data WHERE account_id='{merge_id}' AND create_date >= {time_at}").fetchone()[0]
 
         self.close()
