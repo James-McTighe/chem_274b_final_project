@@ -244,6 +244,38 @@ class Query(ABC):
                 return math.floor(-result*0.02)
         except:
             return 0
+        
+        #EG edit
+    def delete_account(self, account_id: str) -> bool:
+        try:
+        # Connect to the database
+            self.connect()
+
+            delete_query_user_data = "DELETE FROM user_data WHERE account_id = %s"
+            delete_queries = [
+            "DELETE FROM account_balances WHERE account_id = %s",
+            "DELETE FROM transaction_history WHERE account_id = %s",
+            # Add more table names as necessary
+            ]
+            cursor = self.connect.cursor()
+            cursor.execute(delete_query_user_data, (account_id,))
+        
+            for query in delete_queries:
+                cursor.execute(query, (account_id,))
+        
+        # Commit the transaction
+            self.connection.commit()
+        
+            return True
+        except Exception as e:
+        # Log the error
+            print(f"Error deleting account {account_id}: {e}")
+        # Rollback in case of error
+            self.connection.rollback()
+            return False
+        finally:
+        # Close the cursor
+            cursor.close()
 
 
 class BankingSystemImpl(BankingSystem, Query):
@@ -386,6 +418,8 @@ class BankingSystemImpl(BankingSystem, Query):
             return False
         if account_id_1 == account_id_2:
             return False
+        
+
 
         self.connect()
         self.update_account_info(column="merge_id",value=account_id_1,account_id=account_id_2)
@@ -400,12 +434,15 @@ class BankingSystemImpl(BankingSystem, Query):
         merge_balance = self.get_account_balance(account_id_1) + self.get_account_balance(account_id_2)
         self.update_account_balance(merge_balance, timestamp, account_id_1)
         self.record_balance(account_id_1, merge_balance, timestamp)
-        return True
+
+        deletion_result = self.delete_account(account_id_2)
+        return deletion_result.get('success', False)
     
     def get_balance(self, timestamp: int, account_id: str, time_at: int) -> int | None:
         self.connect()
         
         #Account hasn't been created yet
+        
         try:
             cdate=self.cur.execute(f"SELECT create_date from user_data WHERE account_id='{account_id}'").fetchone()[0]
         except:
@@ -426,3 +463,5 @@ class BankingSystemImpl(BankingSystem, Query):
 
 
         self.close()
+
+    
