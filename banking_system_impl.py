@@ -392,6 +392,10 @@ class BankingSystemImpl(BankingSystem, Query):
         self.update_account_info("merge_id",account_id_2,account_id_1)
         self.update_account_info("active",0,account_id_2)
 
+         # EG edit
+        balance_1 = self.get_account_balance(account_id_1) or 0  
+        balance_2 = self.get_account_balance(account_id_2) or 0 
+
 
         merge_balance = self.get_account_balance(account_id_1) + self.get_account_balance(account_id_2)
         self.update_account_balance(merge_balance, timestamp, account_id_1)
