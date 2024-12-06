@@ -244,38 +244,6 @@ class Query(ABC):
                 return math.floor(-result*0.02)
         except:
             return 0
-        
-        #EG edit
-    def delete_account(self, account_id: str) -> bool:
-        try:
-        # Connect to the database
-            self.connect()
-
-            delete_query_user_data = "DELETE FROM user_data WHERE account_id = %s"
-            delete_queries = [
-            "DELETE FROM account_balances WHERE account_id = %s",
-            "DELETE FROM transaction_history WHERE account_id = %s",
-            # Add more table names as necessary
-            ]
-            cursor = self.connect.cursor()
-            cursor.execute(delete_query_user_data, (account_id,))
-        
-            for query in delete_queries:
-                cursor.execute(query, (account_id,))
-        
-        # Commit the transaction
-            self.connection.commit()
-        
-            return True
-        except Exception as e:
-        # Log the error
-            print(f"Error deleting account {account_id}: {e}")
-        # Rollback in case of error
-            self.connection.rollback()
-            return False
-        finally:
-        # Close the cursor
-            cursor.close()
 
 
 class BankingSystemImpl(BankingSystem, Query):
@@ -366,14 +334,27 @@ class BankingSystemImpl(BankingSystem, Query):
         return new_source_balance + self.check_cashbacks(source_account_id, timestamp)
     
     def top_spenders(self, timestamp: int, n:int) -> list[str]:
+        output = self.execute_script(top_spenders, (n,))
+        print(f"Output from execute_script: {output}")
+
+    # Check if output is empty or not
+        if not output:
+            print("No output received from execute_script.")
+    
+    # Perform list comprehension to extract tuple from the output
+        result = [f"{account_id}({int(total_out)})" for account_id, total_out in output]
+        print(f"Formatted result: {result}")
+    
+        return result
         """
         Function to return the top n accounts based on outgoing transactions
-        """
+        
         # Create avariable which stores a tuple: (account id, sum(outgoing transactions)) 
         output = self.execute_script(top_spenders, (n,)) 
 
         # Perform list comprehension to extract tuple from the output
         return [f"{account_id}({int(total_out)})" for account_id, total_out in output]
+        """
     
     def pay(self, timestamp:int, account_id:str, amount:int) -> str|None:
 
@@ -419,35 +400,33 @@ class BankingSystemImpl(BankingSystem, Query):
         if account_id_1 == account_id_2:
             return False
         
-
+    
 
         self.connect()
         self.update_account_info(column="merge_id",value=account_id_1,account_id=account_id_2)
         self.update_account_info("merge_id",account_id_2,account_id_1)
         self.update_account_info("active",0,account_id_2)
 
-         # EG edit
-        balance_1 = self.get_account_balance(account_id_1) or 0  
-        balance_2 = self.get_account_balance(account_id_2) or 0 
-
 
         merge_balance = self.get_account_balance(account_id_1) + self.get_account_balance(account_id_2)
         self.update_account_balance(merge_balance, timestamp, account_id_1)
         self.record_balance(account_id_1, merge_balance, timestamp)
-
-        deletion_result = self.delete_account(account_id_2)
-        return deletion_result.get('success', False)
+        return True
+    #all pending cashback refunds for account 2 need to be reassigned. look at the pending cashbacks, change these associated account IDs to the new merge account. 
+    # merge transaction history, then merge pending cashback with extend function
+    #one line of code for transaction history, use extend function 
+    #add delete account 2 delete function python (del)
     
+
     def get_balance(self, timestamp: int, account_id: str, time_at: int) -> int | None:
         self.connect()
-        
+
         #Account hasn't been created yet
-        
         try:
             cdate=self.cur.execute(f"SELECT create_date from user_data WHERE account_id='{account_id}'").fetchone()[0]
         except:
             return None
-        
+
         mdate=self.cur.execute(f"SELECT merge_date from user_data WHERE account_id='{account_id}'").fetchone()[0]
 
         active=self.cur.execute(f"SELECT active from user_data WHERE account_id='{account_id}'").fetchone()[0]
@@ -458,10 +437,22 @@ class BankingSystemImpl(BankingSystem, Query):
         if time_at < cdate:
             return None
 
+        transaction=self.cur.execute(f"SELECT * from transactions WHERE account_id='{account_id}' AND date_of_transaction={time_at} ").fetchone()
+
         balance=self.cur.execute(f"SELECT MAX(balance_date), amount from balance_history WHERE account_id='{account_id}' AND balance_date <= {time_at}").fetchone()[1]
         return balance + self.check_cashbacks(account_id, time_at)
 
+        if transaction==None:
+            balance=self.cur.execute(f"SELECT MAX(account_date), amount from balances WHERE account_id='{account_id}' AND account_date >= {time_at}").fetchone()[1]
+
+        #Check if account is disabled 
+        #might be able to return none here 
+        active=self.cur.execute(f"SELECT active from user_data WHERE account_id='{account_id}'")
+        if active.fetchone()[0] == 0:
+            merge_id=self.cur.execute(f"SELECT merge_id from user_data WHERE account_id = '{account_id}' ").fetchone()[0]
+
+            #Check if transactions occur
+
+            balance_date=self.cur.execute(f"SELECT MAX(create_date) from user_data WHERE account_id='{merge_id}' AND create_date >= {time_at}").fetchone()[0]
 
         self.close()
-
-    
