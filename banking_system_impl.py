@@ -514,7 +514,7 @@ class BankingSystemImpl(BankingSystem, Query):
         #active=self.cur.execute(f"SELECT active from user_data WHERE account_id='{account_id}'").fetchone()[0]
 
         #if active and mdate:
-        #merge_id=self.cur.execute(f"SELECT merge_id from user_data WHERE account_id = '{account_id}' ").fetchone()[0]
+        #merge_id=self.cur.execute(f"SELECT merge_id from user_data WHERE account_id = '{account_id}' ").fetchone()[0]  
 
         if time_at < cdate:
             return None
