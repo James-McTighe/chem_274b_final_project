@@ -14,8 +14,8 @@ new_balance: Inserts a new balance record into the balances table. The values to
 record_transaction: Records a transaction in the transactions table. The values to be inserted are provided as parameters.
 top_spenders: Retrieves the top spenders based on the outgoing transactions. The result is organized by the total outgoing transactions in descending order.
 update_balance: Updates the balance for a specific account in the balances table.
-check_cashbacks: Checks the total cashbacks for a specific account up to a given date.
-merge_cashbacks: Retrieves the cashbacks for a specific account up to a given date.
+check_cashbacks: Checks the total cashback amount for a specific account up to a given date.
+merge_cashbacks: Retrieves the individual cashback amounts for a specific account up to a given date.
 update_transaction_id: Updates the account ID for transactions in the transactions table.
 record_balance: Records a balance history entry in the balance_history table.
 delete_account: deletes a user account from the user_data table
@@ -413,7 +413,7 @@ Methods:
         
     def merge_cashbacks(self,account_id, timestamp):
         """
-        Merges cashbacks for an account.
+        Calculates cashbacks individually for an account.
         """
         try:
             self.connect()
@@ -432,7 +432,7 @@ Methods:
         
     def check_transactions(self,account_id, timestamp):
         """
-        Checks if an account has any transactions.
+        Checks the number of payment transactions for an account.
         """
         try:
             self.connect()
@@ -647,7 +647,7 @@ class BankingSystemImpl(BankingSystem, Query):
             new_balance = self.get_account_balance(account_id) + self.check_cashbacks(account_id, timestamp) - amount
             actual_balance = self.get_account_balance(account_id) - amount
             if new_balance >= 0:
-                self.update_account_balance(new_balance, timestamp, account_id)
+                self.update_account_balance(actual_balance, timestamp, account_id)
                 cashback_date = timestamp + 86400000
                 self.connect()
                 count=self.cur.execute(f"SELECT COUNT(*) from transactions WHERE type_of_transaction = 'payment' ").fetchone()[0]
@@ -717,10 +717,6 @@ class BankingSystemImpl(BankingSystem, Query):
             return False
 
         self.connect()
-        #self.update_account_info(column="merge_id",value=account_id_2,account_id=account_id_2)
-        #self.update_account_info("merge_id",account_id_1,account_id_1)
-        #self.update_account_info("active",0,account_id_2)
-
 
         merge_balance = self.get_account_balance(account_id_1) + self.get_account_balance(account_id_2)
         self.update_account_balance(merge_balance, timestamp, account_id_1)
@@ -728,28 +724,7 @@ class BankingSystemImpl(BankingSystem, Query):
         self.update_transaction_id(account_id_1, account_id_2)
         self.record_balance(account_id_1, merge_balance, timestamp, None)
         self.add_merge_date(timestamp, account_id_2)
-        """
-        self.cur.execute(
-            "UPDATE user_data "
-            f"SET merge_id='{account_id_1}' "
-            f"WHERE account_id='{account_id_2}';"
-        )
-        self.cur.execute(
-            "UPDATE user_data "
-            f"SET active=0 "
-            f"WHERE account_id='{account_id_2}';"
-        )
-        self.cur.execute(
-            "UPDATE user_data "
-            f"SET merge_id= '{account_id_1}' "
-            f"WHERE account_id='{account_id_1}';"
-        )
-        self.cur.execute(
-            "UPDATE transactions "
-            f"SET account_id= '{account_id_1}' "
-            f"WHERE account_id='{account_id_2}';"
-        )
-        """
+      
         return True
     
     def get_balance(self, timestamp: int, account_id: str, time_at: int) -> int | None:
@@ -770,11 +745,15 @@ class BankingSystemImpl(BankingSystem, Query):
         """
         self.connect()
         
-        #Account hasn't been created yet
+        #Check if account hasn't been created yet
         creation_date=self.cur.execute(f"SELECT MIN(balance_date) from balance_history WHERE account_id='{account_id}'").fetchone()[0]
         if creation_date is None:
             return None
         
+        if time_at < creation_date:
+            return None
+        
+        #Check if account has been merged and recreated
         try:
             merge_date_value=self.cur.execute(f"SELECT merge_date from balance_history WHERE account_id='{account_id}'AND merge_date IS NOT NULL").fetchone()[0]
         except:
@@ -784,44 +763,16 @@ class BankingSystemImpl(BankingSystem, Query):
 
         if merge_date_value != None and merge_date_value <= time_at and merge_date_value >= maxdate:
             return None
-
-        #active=self.cur.execute(f"SELECT active from user_data WHERE account_id='{account_id}'").fetchone()[0]
-
-        #if active and merge_date_value:
-        #merge_id=self.cur.execute(f"SELECT merge_id from user_data WHERE account_id = '{account_id}' ").fetchone()[0]  
-
-        if time_at < creation_date:
-            return None
         
-        #if timestamp==time_at:
-            return self.get_account_balance(account_id)+self.check_cashbacks(account_id, time_at)
-        
+        #Get account balance
         balance=self.cur.execute(f"SELECT MAX(balance_date), amount from balance_history WHERE account_id='{account_id}' AND balance_date <= {time_at}").fetchone()[1]
-        l = self.check_transactions(account_id, time_at)
 
-        if l >=9:
+        #Check number of transactions and apply correction to rounding if exceed a certain amount
+        n_transactions = self.check_transactions(account_id, time_at)
+
+        if n_transactions >=9:
             return balance + self.merge_cashbacks(account_id, time_at)
         
         else:
             return balance + self.check_cashbacks(account_id, time_at)
         
-        
-        transaction=self.cur.execute(f"SELECT * from transactions WHERE account_id='{account_id}' AND date_of_transaction={time_at} ").fetchone()
-
-        if transaction != None:
-            balance=self.cur.execute(f"SELECT MAX(account_date), amount from balances WHERE account_id='{account_id}' AND account_date >= {time_at}").fetchone()[1]
-            return balance
-
-        if transaction==None:
-            balance=self.cur.execute(f"SELECT MAX(account_date), amount from balances WHERE account_id='{account_id}' AND account_date >= {time_at}").fetchone()[1]
-        
-        #Check if account is disabled
-        active=self.cur.execute(f"SELECT active from user_data WHERE account_id='{account_id}'")
-        if active.fetchone()[0] == 0:
-            merge_id=self.cur.execute(f"SELECT merge_id from user_data WHERE account_id = '{account_id}' ").fetchone()[0]
-
-            #Check if transactions occur
-
-            balance_date=self.cur.execute(f"SELECT MAX(create_date) from user_data WHERE account_id='{merge_id}' AND create_date >= {time_at}").fetchone()[0]
-
-        self.close()
